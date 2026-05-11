@@ -1,34 +1,17 @@
 document.addEventListener("DOMContentLoaded", function () {
 
-    // KANBAN SCROLL
-
-    const kanban = document.getElementById("kanbanContainer");
-
-    window.moveLeft = function () {
-        if (!kanban) return;
-        kanban.scrollBy({
-            left: -320,
-            behavior: "smooth"
-        });
-    };
-
-    window.moveRight = function () {
-        if (!kanban) return;
-        kanban.scrollBy({
-            left: 320,
-            behavior: "smooth"
-        });
-    };
-
-
-    // AJAX FILTER SYSTEM
-
+    //=== ELEMENTS ===
     const form = document.getElementById("filterForm");
     const pipelineData = document.getElementById("pipelineData");
+
+    const searchBtn = document.getElementById("searchBtn");
     const clearBtn = document.getElementById("clearBtn");
+    const staffSelect = document.getElementById("staffSelect");
+    const searchInput = document.getElementById("searchInput");
 
     if (!form || !pipelineData) return;
 
+    // === AJAX LOAD ===
     async function loadData() {
 
         const formData = new FormData(form);
@@ -49,36 +32,101 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (newData) {
             pipelineData.innerHTML = newData.innerHTML;
+
+            bindKanban();
         }
     }
 
-    // EVENTS 
-
-    form.addEventListener("submit", function (e) {
+    //=== SEARCH BUTTON ===
+    searchBtn.addEventListener("click", function (e) {
         e.preventDefault();
         loadData();
     });
 
-    const searchInput = document.querySelector(".search-input");
-    if (searchInput) {
-        searchInput.addEventListener("input", function () {
+    // === STAFF FILTER ===
+    staffSelect.addEventListener("change", function () {
+        loadData();
+    });
+
+    //=== CLEAR BUTTON LOGIC ===
+
+    let clearIntervalRef = null;
+    let clearTimeoutRef = null;
+
+    // 1 CLICK = ONE LETTER DELETE
+    clearBtn.addEventListener("click", function () {
+
+        // if long press is running, ignore click
+        if (clearIntervalRef) return;
+
+        searchInput.value = searchInput.value.slice(0, -1);
+
+        if (searchInput.value.length === 0) {
             loadData();
-        });
+        }
+    });
+
+    // === LONG PRESS CLEAR ===
+    clearBtn.addEventListener("mousedown", function () {
+
+        clearTimeoutRef = setTimeout(() => {
+
+            clearIntervalRef = setInterval(() => {
+
+                if (searchInput.value.length > 0) {
+                    searchInput.value = searchInput.value.slice(0, -1);
+                }
+
+                if (searchInput.value.length === 0) {
+                    stopClear();
+                    loadData();
+                }
+
+            }, 70);
+
+        }, 400);
+
+    });
+
+    clearBtn.addEventListener("mouseup", stopClear);
+    clearBtn.addEventListener("mouseleave", stopClear);
+    clearBtn.addEventListener("touchend", stopClear);
+
+    function stopClear() {
+        clearTimeout(clearTimeoutRef);
+        clearInterval(clearIntervalRef);
+        clearTimeoutRef = null;
+        clearIntervalRef = null;
     }
 
-    const staffSelect = document.querySelector(".filter-select");
-    if (staffSelect) {
-        staffSelect.addEventListener("change", function () {
-            loadData();
-        });
+    // === KANBAN FIX ===
+    function bindKanban() {
+
+        function getKanban() {
+            return document.getElementById("kanbanContainer");
+        }
+
+        window.moveLeft = function () {
+            const kanban = getKanban();
+            if (!kanban) return;
+
+            kanban.scrollBy({
+                left: -320,
+                behavior: "smooth"
+            });
+        };
+
+        window.moveRight = function () {
+            const kanban = getKanban();
+            if (!kanban) return;
+
+            kanban.scrollBy({
+                left: 320,
+                behavior: "smooth"
+            });
+        };
     }
 
-    if (clearBtn) {
-        clearBtn.addEventListener("click", function (e) {
-            e.preventDefault();
-            form.reset();
-            loadData();
-        });
-    }
+    bindKanban();
 
 });
