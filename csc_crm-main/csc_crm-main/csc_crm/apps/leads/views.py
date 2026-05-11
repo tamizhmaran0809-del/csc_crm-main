@@ -245,6 +245,7 @@ def lead_pipeline_view(request):
     }
 
     return render(request, 'leads/pipeline_view.html', context)
+    
 # csv download
 def export_leads_csv(request):
 

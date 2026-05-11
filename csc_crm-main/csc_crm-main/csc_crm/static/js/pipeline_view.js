@@ -1,76 +1,84 @@
-// kanban carosel
-function moveLeft(){
+document.addEventListener("DOMContentLoaded", function () {
 
-    const kanban =
-        document.querySelector('.kanban-container');
+    // KANBAN SCROLL
 
-    kanban.scrollBy({
-        left: -320,
-        behavior: 'smooth'
-    });
-}
+    const kanban = document.getElementById("kanbanContainer");
 
-function moveRight(){
+    window.moveLeft = function () {
+        if (!kanban) return;
+        kanban.scrollBy({
+            left: -320,
+            behavior: "smooth"
+        });
+    };
 
-    const kanban =
-        document.querySelector('.kanban-container');
+    window.moveRight = function () {
+        if (!kanban) return;
+        kanban.scrollBy({
+            left: 320,
+            behavior: "smooth"
+        });
+    };
 
-    kanban.scrollBy({
-        left: 320,
-        behavior: 'smooth'
-    });
-}
 
+    // AJAX FILTER SYSTEM
 
-// Reload
+    const form = document.getElementById("filterForm");
+    const pipelineData = document.getElementById("pipelineData");
+    const clearBtn = document.getElementById("clearBtn");
 
-const form = document.getElementById("filterForm");
-const clearBtn = document.getElementById("clearBtn");
-const pipelineData = document.getElementById("pipelineData");
+    if (!form || !pipelineData) return;
 
-// LOAD DATA
-async function loadData() {
+    async function loadData() {
 
-    const formData = new FormData(form);
-    const params = new URLSearchParams(formData);
+        const formData = new FormData(form);
+        const params = new URLSearchParams(formData);
 
-    const response = await fetch(`?${params.toString()}`, {
-        headers: {
-            "X-Requested-With": "XMLHttpRequest"
+        const response = await fetch(`?${params.toString()}`, {
+            headers: {
+                "X-Requested-With": "XMLHttpRequest"
+            }
+        });
+
+        const html = await response.text();
+
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, "text/html");
+
+        const newData = doc.getElementById("pipelineData");
+
+        if (newData) {
+            pipelineData.innerHTML = newData.innerHTML;
         }
+    }
+
+    // EVENTS 
+
+    form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        loadData();
     });
 
-    const html = await response.text();
+    const searchInput = document.querySelector(".search-input");
+    if (searchInput) {
+        searchInput.addEventListener("input", function () {
+            loadData();
+        });
+    }
 
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, "text/html");
+    const staffSelect = document.querySelector(".filter-select");
+    if (staffSelect) {
+        staffSelect.addEventListener("change", function () {
+            loadData();
+        });
+    }
 
-    const newData = doc.getElementById("pipelineData");
+    if (clearBtn) {
+        clearBtn.addEventListener("click", function (e) {
+            e.preventDefault();
+            form.reset();
+            loadData();
+        });
+    }
 
-    pipelineData.innerHTML = newData.innerHTML;
-}
-
-// SUBMIT
-form.addEventListener("submit", function(e){
-    e.preventDefault();
-    loadData();
-});
-
-// SEARCH LIVE
-document.querySelector(".search-input")
-.addEventListener("input", function(){
-    loadData();
-});
-
-// STAFF FILTER
-document.querySelector(".filter-select")
-.addEventListener("change", function(){
-    loadData();
-});
-
-// CLEAR BUTTON
-clearBtn.addEventListener("click", function(){
-
-    form.reset();   // reset UI
-    loadData();     // reload full data
 });

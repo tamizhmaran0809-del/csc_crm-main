@@ -40,7 +40,7 @@ body{
 
 /* MAIN CONTAINER */
 
-.container{
+.pipeline-container{
     padding:15px;
     display:flex;
     flex-direction:column;
@@ -282,7 +282,7 @@ body{
 .kanban-container{
     display:flex;
     gap:16px;
-    overflow-x:hidden;
+    overflow-x: auto;
     padding: 10px;
     scroll-behavior:smooth;
     width: 100%;
@@ -342,7 +342,8 @@ body{
     display:flex;
     flex-direction:column;
     max-height:80vh;
-    flex-shrink:0;
+    /* flex-shrink:0; */
+    flex: 0 0 auto;
 }
 
 /* COLUMN HEADER */
