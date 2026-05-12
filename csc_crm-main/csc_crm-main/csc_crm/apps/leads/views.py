@@ -198,9 +198,7 @@ def lead_pipeline_view(request):
 
     if search_query:
         leads = leads.filter(
-            Q(course_interested__icontains=search_query) |
-            Q(email__icontains=search_query) |
-            Q(phone_no__icontains=search_query)
+            Q(course_interested__icontains=search_query) 
         )
 
     if assigned_to:
