@@ -1,0 +1,144 @@
+
+{% extends 'leads/base.html' %}
+
+{% block content %}
+
+<body>
+
+<div class="container">
+
+    
+    <div class="form-box">
+        <h2> Log a Call </h2>
+        <p class="sub-text">Record call details</p>
+
+        <form method="POST" onsubmit="return validateForm()">
+        {% csrf_token %}
+
+    
+        <label> NAME</label>
+        <input type="text" name="lead_name" id="lead_name"  placeholder="Enter name">
+        <span id="name_error" style="color:red; font-size:12px;"></span>
+
+            <div class="row">
+                <div class="field">
+                    <label>CALL DATE</label>
+                    <input type="date" name="call_date" placeholder="Enter call date" onclick="this.showPicker()">
+                </div>
+
+                <div class="field">
+                    <label>CALL TIME</label>
+                    <input type="time" name="call_time" placeholder="Enter calltime" onclick="this.showPicker()">
+                </div>
+            </div>
+
+           <div class="row">
+                  <div class="field">
+                    <label>DURATION</label>
+                    <input type="number" name="duration" placeholder="Enter Duration" >
+                </div>
+
+                <div class="field">
+                    <label>CALL OUTCOME</label>
+
+                    <select name="call_outcome">
+                        <option>Interested</option>
+                        <option>Not Reachable</option>
+                        <option>Demo Scheduled</option>
+                        <option>Not Interested</option>
+                    </select>
+                </div>
+            </div>
+
+            <label>CALL NOTES (OPTIONAL)</label>
+            <textarea name="notes" rows="5" placeholder="Enter call notes"></textarea>
+
+            <label>NEXT FOLLOW-UP DATE</label>
+            <input type="date" name="next_followup_date" onclick="this.showPicker()">
+
+            <button type="submit"><i class="fa fa-phone save"></i> Save CallLog..</button>
+            
+        </form>
+    </div>
+
+   
+    <div class="history">
+
+        
+    <h3>Recent Call History</h3>
+  
+       
+
+    {% for log in logs %}
+        
+            <a href="javascript:void(0);" class="card-link"
+             onclick="openPopup(
+            '{{ log.lead_name }}',
+            '{{ log.call_date }}',
+            '{{ log.call_time }}',
+            '{{ log.duration }}',
+            '{{ log.call_outcome }}',
+            '{{ log.notes }}',
+            '{{ log.next_followup_date }}')">
+
+         <div class="card {{ log.call_outcome|slugify }}">
+
+            <div class="card-header">
+                <h4>{{ log.lead_name }}</h4>
+
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span class="time">
+                        {{ log.call_date }} • {{ log.duration }}m
+                    </span>
+
+                
+                <form method="POST" action="{% url 'delete_call' log.id %}" onsubmit="return confirm('Do you want to delete this call history?')">
+                 {% csrf_token %}
+                <button type="submit" class="delete-btn" onclick="event.stopPropagation();">
+                   🗑
+                </button>
+                </form>
+                
+                </div>
+            </div>
+
+            <span class="badge {{ log.call_outcome|slugify }}">
+                {{ log.call_outcome }}
+            </span>
+
+            <p>{{ log.notes }}</p>
+
+           {% if log.next_followup_date and log.call_outcome != "Not Interested" %}
+
+    <div class="follow">
+
+        followup date: {{ log.next_followup_date }}
+    </div>
+     {% endif %}
+      
+    </div>
+    </a>
+     {% endfor %}
+
+    </div>
+
+</div>
+
+
+<div id="popup" class="popup">
+<div class="popup-content">
+<span class="close" onclick="closePopup()">&times;</span>
+
+<h3 id="p_name"></h3>
+<p>Date: <span id="p_date"></span></p>
+<p>Time: <span id="p_time"></span></p>
+<p>Duration: <span id="p_duration"></span></p>
+<p>Outcome: <span id="p_outcome"></span></p>
+<p>Notes: <span id="p_notes"></span></p>
+<p>Followup: <span id="p_follow"></span></p>
+
+</div>
+</div>
+
+</body>
+{% endblock %}
