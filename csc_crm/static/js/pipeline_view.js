@@ -1,0 +1,150 @@
+document.addEventListener("DOMContentLoaded", function () {
+
+    // ELEMENTS
+    const form = document.getElementById("filterForm");
+    const pipelineData = document.getElementById("pipelineData");
+
+    const searchBtn = document.getElementById("searchBtn");
+    const clearBtn = document.getElementById("clearBtn");
+
+    const staffSelect = document.getElementById("staffSelect");
+    const searchInput = document.getElementById("searchInput");
+
+    const exportBtn = document.getElementById("exportBtn");
+
+    if (!form || !pipelineData) return;
+
+    // EXPORT URL UPDATE
+    function updateExportUrl() {
+        if (!exportBtn) return;
+
+        const baseUrl = exportBtn.dataset.url || "";
+
+        const params = new URLSearchParams({
+            search: searchInput?.value || "",
+            assigned_to: staffSelect?.value || ""
+        });
+
+        exportBtn.href = `${baseUrl}?${params.toString()}`;
+    }
+
+
+    // NO DATA MESSAGE
+    function showNoDataMessage() {
+        pipelineData.innerHTML = `
+            <div class="no-search-results">
+                No leads available for this filter.
+            </div>
+        `;
+    }
+
+    // AJAX LOAD DATA
+    async function loadData() {
+
+        const formData = new FormData(form);
+        const params = new URLSearchParams(formData);
+
+        try {
+            const url = `${window.location.pathname}?${params.toString()}`;
+
+            const response = await fetch(url, {
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest"
+                }
+            });
+
+            const html = await response.text();
+
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, "text/html");
+
+            const newData = doc.getElementById("pipelineData");
+
+            if (!newData || !newData.innerHTML.trim()) {
+                showNoDataMessage();
+                return;
+            }
+
+            pipelineData.innerHTML = newData.innerHTML;
+
+            updateExportUrl();
+            bindKanban();
+
+            history.replaceState(
+                null,
+                "",
+                "?" + params.toString()
+            );
+
+        } catch (error) {
+            console.log("AJAX ERROR:", error);
+        }
+    }
+
+    // SEARCH BUTTON
+    if (searchBtn) {
+        searchBtn.addEventListener("click", function (e) {
+            e.preventDefault();
+            updateExportUrl();
+            loadData();
+        });
+    }
+
+    // STAFF FILTER CHANGE
+    if (staffSelect) {
+        staffSelect.addEventListener("change", function () {
+            updateExportUrl();
+            loadData();
+        });
+    }
+
+    // CLEAR FILTER
+    if (clearBtn) {
+        clearBtn.addEventListener("click", function (e) {
+            e.preventDefault();
+
+            if (searchInput) searchInput.value = "";
+            if (staffSelect) staffSelect.value = "";
+
+            updateExportUrl();
+            loadData();
+
+            history.replaceState(
+                null,
+                "",
+                window.location.pathname
+            );
+        });
+    }
+
+    // KANBAN SCROLL (bind ONCE)
+    function bindKanban() {
+
+        const getKanban = () => document.getElementById("kanbanContainer");
+
+        window.moveLeft = function () {
+            const kanban = getKanban();
+            if (!kanban) return;
+
+            kanban.scrollBy({
+                left: -320,
+                behavior: "smooth"
+            });
+        };
+
+        window.moveRight = function () {
+            const kanban = getKanban();
+            if (!kanban) return;
+
+            kanban.scrollBy({
+                left: 320,
+                behavior: "smooth"
+            });
+        };
+    }
+
+    // INIT
+    bindKanban();
+    updateExportUrl();
+
+});
